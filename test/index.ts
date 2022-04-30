@@ -238,6 +238,78 @@ describe("DAO", function () {
     expect(await (await dao.electionsMapping("1")).winner[0]).to.equal(add1.address);
     expect(await (await dao.electionsMapping("1")).winner[1].toString()).to.equal("2");
   })
+
+  it("It should revert for each require from isPrizeWithdrawable modifier", async function () {
+
+    let participants = [add1.address, add2.address, add3.address];
+    await dao.addVoting(participants, "2");
+
+    await expect(dao.connect(add2).withdrawPrize("1"))
+      .to.revertedWith("address is not the winner")
+
+    await expect(dao.connect(add4).withdrawPrize("1"))
+      .to.revertedWith("address is not a participant'")
+
+    await sleep(2500)
+
+    await expect(dao.connect(add1).withdrawPrize("1"))
+      .to.revertedWith("address is not the winner")
+  });
+
+  it("It should revert for each require from isVoteAllowed modifier", async function () {
+
+    let participants = [add1.address, add2.address, add3.address];
+    await dao.addVoting(participants, "2");
+
+    let option = { value: ethers.utils.parseEther("0.01"), from: add1.address };
+    await expect(dao.connect(add1).vote(add3.address, "1", option))
+      .to.emit(dao, 'Received')
+      .withArgs(add1.address, "10000000000000000");
+
+    await expect(dao.connect(add1).vote(add3.address, "1", option))
+      .to.revertedWith("address has voted already");
+
+    option.value = ethers.utils.parseEther("0.001");
+    option.from = add2.address;
+
+    await expect(dao.connect(add2).vote(add3.address, "1", option))
+      .to.revertedWith("amount is not 0.01 eth");
+
+    option.value = ethers.utils.parseEther("1");
+    await expect(dao.connect(add2).vote(add3.address, "1", option))
+      .to.revertedWith("amount is not 0.01 eth");
+  });
+
+
+  it("It should revert for each require from isParticipatingInElections modifier", async function () {
+
+    let participants = [add1.address, add2.address, add3.address];
+    await dao.addVoting(participants, "2");
+
+    let option = { value: ethers.utils.parseEther("0.01"), from: add4.address };
+    await expect(dao.connect(add4).vote(add3.address, "1", option))
+      .to.revertedWith("voter is not a participant");
+
+    option = { value: ethers.utils.parseEther("0.01"), from: add1.address };
+    await expect(dao.connect(add1).vote(add4.address, "1", option))
+      .to.revertedWith("candidate is not a participant");
+  });
+
+  it("It should revert while withdrawing fee with account different from owner", async function () {
+    let participants = [add1.address, add2.address, add3.address];
+    await dao.addVoting(participants, "2");
+
+    await expect(dao.connect(add1).withdrawFee())
+      .to.revertedWith("Ownable: caller is not the owner");
+  })
+
+  it("It should be reverted when calling withdraw fee", async function () {
+    let participants = [add1.address, add2.address, add3.address];
+    await dao.addVoting(participants, "2");
+
+    await expect(dao.connect(add1).withdrawFee())
+      .to.revertedWith("Ownable: caller is not the owner");
+  })
 });
 
 

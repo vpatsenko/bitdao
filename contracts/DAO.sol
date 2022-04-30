@@ -165,7 +165,6 @@ contract DAO is Ownable, ReentrancyGuard {
         emit Received(msg.sender, msg.value);
     }
 
-    // TODO: check isParticipatingInElections
     function withdrawPrize(uint256 _electionID)
         public
         payable
@@ -193,7 +192,7 @@ contract DAO is Ownable, ReentrancyGuard {
 
     function withdrawFee() public payable onlyOwner {
         address payable _to = payable(msg.sender);
-        (bool sent, bytes memory data) = _to.call{value: feeTreasury}("");
+        (bool sent, ) = _to.call{value: feeTreasury}("");
         require(sent, "Failed to send Ether");
         feeTreasury = 0;
     }
