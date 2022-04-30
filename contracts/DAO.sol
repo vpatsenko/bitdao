@@ -74,11 +74,44 @@ contract DAO is Ownable {
         feePercentage = 20;
     }
 
-    function initElections() public {
-        require(true != isElectionInited, "election is inited");
+    struct Election {
+        bool isElectionInited;
+        bool isPrizeWithdrawn;
+        uint256 deadline;
+        uint256 treasury;
+        uint256 feePercentage;
+        Winner winner;
+        mapping(address => Participant) addressToParticipant;
+    }
 
-        isElectionInited = true;
-        deadline = block.timestamp + 259200;
+    mapping(uint256 => Election) public electionsMapping;
+    uint256 public numberOfCurrentElections;
+
+    // returns election id which should be used in the other
+    // function calls to identify the election user is participating in
+    function initElections(address[] memory participanAddressesList)
+        public
+        onlyOwner
+        returns (uint256)
+    {
+        electionsMapping[numberOfCurrentElections].isElectionInited = true;
+        electionsMapping[numberOfCurrentElections].isPrizeWithdrawn = false;
+
+        electionsMapping[numberOfCurrentElections].deadline =
+            block.timestamp +
+            256200;
+
+        for (uint256 i = 0; i < participanAddressesList.length; i++) {
+            Participant memory participant;
+            participant.isParticipant = true;
+
+            electionsMapping[numberOfCurrentElections].addressToParticipant[
+                    participanAddressesList[i]
+                ] = participant;
+        }
+
+        numberOfCurrentElections++;
+        return numberOfCurrentElections;
     }
 
     function participate() public isElectionInitedMod isDeadlineReached {
