@@ -24,7 +24,7 @@ describe("DAO", function () {
   it("It should addVoting, check electionId and then vote with address which was not a participant", async function () {
     let participants = [add1.address, add2.address, add3.address];
 
-    await expect(dao.addVoting(participants))
+    await expect(dao.addVoting(participants, "256200"))
       .to.emit(dao, 'VotingWithElectionID')
       .withArgs("1");
 
@@ -36,7 +36,7 @@ describe("DAO", function () {
   it("It should addVoting, check electionId and then vote for a candidate wich is not a participant", async function () {
     let participants = [add1.address, add2.address, add3.address];
 
-    await expect(dao.addVoting(participants))
+    await expect(dao.addVoting(participants, "256200"))
       .to.emit(dao, 'VotingWithElectionID')
       .withArgs("1");
 
@@ -48,7 +48,7 @@ describe("DAO", function () {
   it("It should addVoting, check electionId and then vote for a candidate normally", async function () {
     let participants = [add1.address, add2.address, add3.address];
 
-    await expect(dao.addVoting(participants))
+    await expect(dao.addVoting(participants, "256200"))
       .to.emit(dao, 'VotingWithElectionID')
       .withArgs("1");
 
@@ -58,10 +58,10 @@ describe("DAO", function () {
       .withArgs(add1.address, "10000000000000000");
   });
 
-  it("It should addVoting, check electionId and then vote for a candidate normally and then vote for the second time", async function () {
+  it("It should addVoting, check electionId and then vote for a candidate normally and then vote for the second time a", async function () {
     let participants = [add1.address, add2.address, add3.address];
 
-    await expect(dao.addVoting(participants))
+    await expect(dao.addVoting(participants, "256200"))
       .to.emit(dao, 'VotingWithElectionID')
       .withArgs("1");
 
@@ -74,4 +74,46 @@ describe("DAO", function () {
       .to.revertedWith("address has voted already");
   });
 
+  it("It should addVoting, check electionId, vote for a candidate with wrong eth amount ", async function () {
+    let participants = [add1.address, add2.address, add3.address];
+
+    await expect(dao.addVoting(participants, "256200"))
+      .to.emit(dao, 'VotingWithElectionID')
+      .withArgs("1");
+
+    const options = { value: ethers.utils.parseEther("0.001"), from: add1.address };
+    await expect(dao.connect(add1).vote(add2.address, "1", options))
+      .to.revertedWith("amount is not 0.01 eth");
+  });
+
+  it("It should addVoting, check electionId, vote for with wrong electionID ", async function () {
+    let participants = [add1.address, add2.address, add3.address];
+
+    await expect(dao.addVoting(participants, "256200"))
+      .to.emit(dao, 'VotingWithElectionID')
+      .withArgs("1");
+
+    const options = { value: ethers.utils.parseEther("0.01"), from: add1.address };
+    await expect(dao.connect(add1).vote(add2.address, "2", options))
+      .to.revertedWith("election is not inited");
+  });
+
+  it("It should addVoting with small deadline, sleep, and be reverted due to the ended deadline", async function () {
+    let participants = [add1.address, add2.address, add3.address];
+
+    await expect(dao.addVoting(participants, "2"))
+      .to.emit(dao, 'VotingWithElectionID')
+      .withArgs("1");
+
+    await sleep(2500);
+
+    const options = { value: ethers.utils.parseEther("0.01"), from: add1.address };
+    await expect(dao.connect(add1).vote(add2.address, "1", options))
+      .to.revertedWith("election is finished");
+  });
 });
+
+
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}

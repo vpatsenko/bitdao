@@ -46,6 +46,7 @@ contract DAO is Ownable, ReentrancyGuard {
         _;
     }
 
+    //TODO: test double prize withdrawal
     modifier isPrizeWithdrawable(uint256 _electionID) {
         require(
             electionsMapping[_electionID].isEnded == true,
@@ -94,18 +95,20 @@ contract DAO is Ownable, ReentrancyGuard {
     }
 
     // returns election id which should be used in the other
-    // function calls to identify the election user is participating in
-    function addVoting(address[] memory participanAddressesList)
-        public
-        onlyOwner
-    {
+    // function calls to identify the election user is participating in.
+    // In order to test logic with deadline properly I let the owner
+    // to assign deadine. The right deadline is 256200;
+    function addVoting(
+        address[] memory participanAddressesList,
+        uint256 _deadline
+    ) public onlyOwner {
         numberOfCurrentElections++;
         electionsMapping[numberOfCurrentElections].isElectionInited = true;
         electionsMapping[numberOfCurrentElections].isPrizeWithdrawn = false;
 
         electionsMapping[numberOfCurrentElections].deadline =
             block.timestamp +
-            256200;
+            _deadline;
 
         for (uint256 i = 0; i < participanAddressesList.length; i++) {
             Participant memory participant;
