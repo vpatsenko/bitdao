@@ -15,7 +15,7 @@ async function main() {
 
   // We get the contract to deploy
   const DAO = await ethers.getContractFactory("DAO");
-  const dao = await DAO.deploy("Hello, Hardhat!");
+  const dao = await DAO.deploy();
 
   await dao.deployed();
 
