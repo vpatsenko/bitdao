@@ -41,20 +41,28 @@ contract DAO is Ownable, ReentrancyGuard {
 
     modifier isElectionInited(uint256 _electionID) {
         require(
-            electionsMapping[_electionID].isElectionInited == true,
+            electionsMapping[_electionID].isElectionInited,
             "election is not inited"
         );
         _;
     }
 
-    //TODO: test double prize withdrawal
     modifier isPrizeWithdrawable(uint256 _electionID) {
+        require(
+            addressesToElectionIDs[msg.sender] != 0,
+            "address is not a participant"
+        );
         require(
             electionsMapping[_electionID].winner.winnerAddress == msg.sender,
             "address is not the winner"
         );
+        require(
+            !electionsMapping[_electionID].isPrizeWithdrawn,
+            "prize has been withdrawn already"
+        );
+
         if (electionsMapping[_electionID].deadline < block.timestamp) {
-            electionsMapping[_electionID].isEnded == true;
+            electionsMapping[_electionID].isEnded = true;
         }
         _;
     }
@@ -73,9 +81,9 @@ contract DAO is Ownable, ReentrancyGuard {
 
     modifier isVoteAllowed(uint256 _electionID) {
         require(
-            electionsMapping[_electionID]
+            !electionsMapping[_electionID]
                 .addressToParticipant[msg.sender]
-                .isVoted == false,
+                .isVoted,
             "address has voted already"
         );
         require(10000000000000000 == msg.value, "amount is not 0.01 eth");
@@ -185,10 +193,8 @@ contract DAO is Ownable, ReentrancyGuard {
 
     function withdrawFee() public payable onlyOwner {
         address payable _to = payable(msg.sender);
-        uint256 feeTreasuryAmount = feeTreasury;
         (bool sent, bytes memory data) = _to.call{value: feeTreasury}("");
         require(sent, "Failed to send Ether");
-        emit Withdrawal(msg.sender, feeTreasuryAmount, data);
         feeTreasury = 0;
     }
 }
