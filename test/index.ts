@@ -10,6 +10,7 @@ describe("DAO", function () {
   let add1: SignerWithAddress;
   let add2: SignerWithAddress;
   let add3: SignerWithAddress;
+  let add4: SignerWithAddress;
 
   beforeEach(async () => {
     const DAO = await ethers.getContractFactory("DAO");
@@ -17,35 +18,60 @@ describe("DAO", function () {
     await dao.deployed();
 
     // the first signer is owner by default
-    [owner, add1, add2, add3] = await ethers.getSigners();
+    [owner, add1, add2, add3, add4] = await ethers.getSigners();
   });
 
-  it("It should addVoting and get electionID", async function () {
-
+  it("It should addVoting, check electionId and then vote with address which was not a participant", async function () {
     let participants = [add1.address, add2.address, add3.address];
 
-    // await dao.addVoting(participants);
-    // let receipe = await tx.wait(1);
+    await expect(dao.addVoting(participants))
+      .to.emit(dao, 'VotingWithElectionID')
+      .withArgs("1");
 
-    // let electionID: string;
-    // let invokerAddress: string;
+    const options = { value: ethers.utils.parseEther("0.01"), from: add4.address };
+    await expect(dao.connect(add4).vote(add1.address, "1", options))
+      .to.revertedWith("voter is not a participant");
+  });
 
-
-    // receipe.events?.map(x => {
-    //   x.args?.map(y => {
-    //     console.log(y)
-    //   })
-    // })
-
+  it("It should addVoting, check electionId and then vote for a candidate wich is not a participant", async function () {
+    let participants = [add1.address, add2.address, add3.address];
 
     await expect(dao.addVoting(participants))
-      .to.emit(dao, 'VotingIsAddedForAddressAndElectionID')
-      .withArgs(owner.address, "1");
+      .to.emit(dao, 'VotingWithElectionID')
+      .withArgs("1");
 
-    // console.log(invokerAddress[0]);
-
+    const options = { value: ethers.utils.parseEther("0.01"), from: add2.address };
+    await expect(dao.connect(add2).vote(add4.address, "1", options))
+      .to.revertedWith("candidate is not a participant");
   });
-});
 
-    // const options = { value: ethers.utils.parseEther("1.0"), from: add1.address };
-    // let tx = await dao.connect(add1).deposit(options);
+  it("It should addVoting, check electionId and then vote for a candidate normally", async function () {
+    let participants = [add1.address, add2.address, add3.address];
+
+    await expect(dao.addVoting(participants))
+      .to.emit(dao, 'VotingWithElectionID')
+      .withArgs("1");
+
+    const options = { value: ethers.utils.parseEther("0.01"), from: add1.address };
+    await expect(dao.connect(add1).vote(add3.address, "1", options))
+      .to.emit(dao, 'Received')
+      .withArgs(add1.address, "10000000000000000");
+  });
+
+  it("It should addVoting, check electionId and then vote for a candidate normally and then vote for the second time", async function () {
+    let participants = [add1.address, add2.address, add3.address];
+
+    await expect(dao.addVoting(participants))
+      .to.emit(dao, 'VotingWithElectionID')
+      .withArgs("1");
+
+    const options = { value: ethers.utils.parseEther("0.01"), from: add1.address };
+    await expect(dao.connect(add1).vote(add3.address, "1", options))
+      .to.emit(dao, 'Received')
+      .withArgs(add1.address, "10000000000000000");
+
+    await expect(dao.connect(add1).vote(add2.address, "1", options))
+      .to.revertedWith("address has voted already");
+  });
+
+});

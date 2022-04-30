@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract DAO is Ownable, ReentrancyGuard {
     event Received(address, uint256);
-    event VotingIsAddedForAddressAndElectionID(address, uint256);
+    event VotingWithElectionID(uint256);
 
     struct Participant {
         bool isVoted;
@@ -58,10 +58,14 @@ contract DAO is Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier isParticipatingInElections() {
+    modifier isParticipatingInElections(address _candidateAddress) {
         require(
-            addressesToElectionIDs[msg.sender] == 0,
-            "address is not participating in the elections"
+            addressesToElectionIDs[msg.sender] != 0,
+            "voter is not a participant"
+        );
+        require(
+            addressesToElectionIDs[_candidateAddress] != 0,
+            "candidate is not a participant"
         );
         _;
     }
@@ -110,18 +114,19 @@ contract DAO is Ownable, ReentrancyGuard {
             electionsMapping[numberOfCurrentElections].addressToParticipant[
                     participanAddressesList[i]
                 ] = participant;
+
+            addressesToElectionIDs[
+                participanAddressesList[i]
+            ] = numberOfCurrentElections;
         }
 
-        emit VotingIsAddedForAddressAndElectionID(
-            msg.sender,
-            numberOfCurrentElections
-        );
+        emit VotingWithElectionID(numberOfCurrentElections);
     }
 
     function vote(address _participant, uint256 _electionID)
         public
         payable
-        isParticipatingInElections
+        isParticipatingInElections(_participant)
         isVoteAllowed(_electionID)
         isElectionInited(_electionID)
         isDeadlineReached(_electionID)
@@ -149,10 +154,10 @@ contract DAO is Ownable, ReentrancyGuard {
         emit Received(msg.sender, msg.value);
     }
 
+    // TODO: check isParticipatingInElections
     function withdrawPrize(uint256 _electionID)
         public
         payable
-        isParticipatingInElections
         isPrizeWithdrawable(_electionID)
     {
         uint256 fee = calculateFee(electionsMapping[_electionID].treasury);
