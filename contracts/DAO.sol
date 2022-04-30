@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 contract DAO is Ownable, ReentrancyGuard {
     event Received(address, uint256);
     event VotingWithElectionID(uint256);
+    event Withdrawal(address, uint256, bytes);
 
     struct Participant {
         bool isVoted;
@@ -49,13 +50,12 @@ contract DAO is Ownable, ReentrancyGuard {
     //TODO: test double prize withdrawal
     modifier isPrizeWithdrawable(uint256 _electionID) {
         require(
-            electionsMapping[_electionID].isEnded == true,
-            "election is not ended"
-        );
-        require(
             electionsMapping[_electionID].winner.winnerAddress == msg.sender,
             "address is not the winner"
         );
+        if (electionsMapping[_electionID].deadline < block.timestamp) {
+            electionsMapping[_electionID].isEnded == true;
+        }
         _;
     }
 
@@ -94,7 +94,7 @@ contract DAO is Ownable, ReentrancyGuard {
         numberOfCurrentElections = 0;
     }
 
-    // returns election id which should be used in the other
+    // emits election id which should be used in the other
     // function calls to identify the election user is participating in.
     // In order to test logic with deadline properly I let the owner
     // to assign deadine. The right deadline is 256200;
@@ -170,6 +170,8 @@ contract DAO is Ownable, ReentrancyGuard {
         (bool sent, bytes memory data) = _to.call{value: prize}("");
         require(sent, "Failed to send Ether");
 
+        emit Withdrawal(msg.sender, prize, data);
+
         electionsMapping[_electionID].treasury -= prize;
         electionsMapping[_electionID].isPrizeWithdrawn = true;
 
@@ -183,8 +185,10 @@ contract DAO is Ownable, ReentrancyGuard {
 
     function withdrawFee() public payable onlyOwner {
         address payable _to = payable(msg.sender);
+        uint256 feeTreasuryAmount = feeTreasury;
         (bool sent, bytes memory data) = _to.call{value: feeTreasury}("");
         require(sent, "Failed to send Ether");
+        emit Withdrawal(msg.sender, feeTreasuryAmount, data);
         feeTreasury = 0;
     }
 }
