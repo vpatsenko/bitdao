@@ -134,16 +134,16 @@ contract DAO is Ownable, ReentrancyGuard {
         emit VotingWithElectionID(numberOfCurrentElections);
     }
 
-    function vote(address _participant, uint256 _electionID)
+    function vote(address _candidate, uint256 _electionID)
         public
         payable
-        isParticipatingInElections(_participant)
         isVoteAllowed(_electionID)
         isElectionInited(_electionID)
         isDeadlineReached(_electionID)
+        isParticipatingInElections(_candidate)
     {
         electionsMapping[_electionID]
-            .addressToParticipant[_participant]
+            .addressToParticipant[_candidate]
             .voteAmount += 1;
         electionsMapping[_electionID]
             .addressToParticipant[msg.sender]
@@ -154,13 +154,13 @@ contract DAO is Ownable, ReentrancyGuard {
         if (
             electionsMapping[_electionID].winner.voteAmount <
             electionsMapping[_electionID]
-                .addressToParticipant[_participant]
+                .addressToParticipant[_candidate]
                 .voteAmount
         ) {
             electionsMapping[_electionID].winner.voteAmount = electionsMapping[
                 _electionID
-            ].addressToParticipant[_participant].voteAmount;
-            electionsMapping[_electionID].winner.winnerAddress = _participant;
+            ].addressToParticipant[_candidate].voteAmount;
+            electionsMapping[_electionID].winner.winnerAddress = _candidate;
         }
         emit Received(msg.sender, msg.value);
     }

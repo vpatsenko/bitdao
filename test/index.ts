@@ -191,7 +191,7 @@ describe("DAO", function () {
       .to.revertedWith("prize has been withdrawn already");
   });
 
-  it("It should addVoting, vote for participant add3 and let this acc3 withdraw prize for the first time and be reverted for the secondn time", async function () {
+  it("It should addVoting, and withdraw prize with being reveted because it is not a participant", async function () {
     let participants = [add1.address, add2.address, add3.address];
 
     await expect(dao.addVoting(participants, "2"))
@@ -212,6 +212,32 @@ describe("DAO", function () {
       .to.revertedWith("Ownable: caller is not the owner");
   })
 
+  it("It should test vote with winner that is changing", async function () {
+    let participants = [add1.address, add2.address, add3.address];
+
+    await dao.addVoting(participants, "256200");
+
+    const optionAddress1 = { value: ethers.utils.parseEther("0.01"), from: add1.address };
+    await expect(dao.connect(add1).vote(add3.address, "1", optionAddress1))
+      .to.emit(dao, 'Received')
+      .withArgs(add1.address, "10000000000000000");
+
+    expect(await (await dao.electionsMapping("1")).winner[0]).to.equal(add3.address);
+    expect(await (await dao.electionsMapping("1")).winner[1].toString()).to.equal("1");
+
+    const optionAddress2 = { value: ethers.utils.parseEther("0.01"), from: add2.address };
+    await expect(dao.connect(add2).vote(add1.address, "1", optionAddress2))
+      .to.emit(dao, 'Received')
+      .withArgs(add2.address, "10000000000000000");
+
+    const optionAddress3 = { value: ethers.utils.parseEther("0.01"), from: add3.address };
+    await expect(dao.connect(add3).vote(add1.address, "1", optionAddress3))
+      .to.emit(dao, 'Received')
+      .withArgs(add3.address, "10000000000000000");
+
+    expect(await (await dao.electionsMapping("1")).winner[0]).to.equal(add1.address);
+    expect(await (await dao.electionsMapping("1")).winner[1].toString()).to.equal("2");
+  })
 });
 
 
