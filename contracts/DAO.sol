@@ -2,8 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract DAO {
+contract DAO is Ownable {
     event Received(address, uint256);
 
     struct Participant {
@@ -34,6 +35,7 @@ contract DAO {
     modifier isDeadlineReached() {
         if (deadline < block.timestamp) {
             isElectionInited = false;
+            deadline = 0;
             require(deadline > block.timestamp, "election is finished");
         }
         _;
@@ -44,17 +46,31 @@ contract DAO {
         _;
     }
 
-    address private owner;
-    bool public isElectionInited;
-    uint256 public deadline;
+    modifier prizeWithdrawnMod() {
+        require(isPrizeWithdrawn == false, "prize is already withdrawn");
+        require(deadline == 0, "deadline should be equal to zero");
+        require(
+            isElectionInited == false,
+            "elections should be ended in order for the prize to be withdrawn"
+        );
+        require(
+            msg.sender == winner.winnerAddress,
+            "address is not the winner"
+        );
+        _;
+    }
 
+    bool public isElectionInited;
+    bool public isPrizeWithdrawn;
+
+    uint256 public deadline;
     uint256 public treasury;
-    Winner private winner;
     uint256 public feePercentage;
+
+    Winner private winner;
 
     constructor() {
         isElectionInited = false;
-        owner = msg.sender;
         feePercentage = 20;
     }
 
@@ -99,13 +115,7 @@ contract DAO {
         }
     }
 
-    //TODO: withdraw prize after deadline
-    function withdrawPrize() public payable isDeadlineReached {
-        require(
-            msg.sender == winner.winnerAddress,
-            "address is not the winner"
-        );
-
+    function withdrawPrize() public payable prizeWithdrawnMod {
         uint256 fee = calcFee();
         uint256 prize = treasury - fee;
 
@@ -114,16 +124,19 @@ contract DAO {
         require(sent, "Failed to send Ether");
 
         treasury -= prize;
+        isPrizeWithdrawn = true;
     }
 
     function calcFee() internal view returns (uint256) {
         return (feePercentage * treasury) / 100;
     }
 
-    // TODO: onlyOwner from openzeppelin
-    // function withdrawFee() public payable {
-    //     address payable _to = payable(msg.sender);
-    //     (bool sent, bytes memory data) = _to.call{value: treasury}("");
-    //     require(sent, "Failed to send Ether");
-    // }
+    function withdrawFee() public payable onlyOwner {
+        require(isPrizeWithdrawn == false, "prize is not withdrawed");
+
+        address payable _to = payable(msg.sender);
+        (bool sent, bytes memory data) = _to.call{value: treasury}("");
+        require(sent, "Failed to send Ether");
+        treasury = 0;
+    }
 }
