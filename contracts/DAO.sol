@@ -107,36 +107,14 @@ contract DAO {
         numberOfCurrentElections = 0;
     }
 
-    // emits election id which should be used in the other
-    // function calls to identify the election user is participating in.
-    // In order to test logic with deadline properly I let the owner
-    // to assign deadine. The right deadline is 256200;
-    function addVoting(
-        // address[] memory participanAddressesList,
-        uint256 _deadline
-    ) public onlyOwner {
+    // // emits election id which should be used in the other
+    // // function calls to identify the election user is participating in.
+    // // In order to test logic with deadline properly I let the owner
+    // // to assign deadine. The right deadline is 256200;
+    function addVoting(uint256 _deadline) public onlyOwner {
         numberOfCurrentElections++;
-        // electionsMapping[numberOfCurrentElections].isElectionInited = true;
-        // electionsMapping[numberOfCurrentElections].isPrizeWithdrawn = false;
-
-        // electionsMapping[numberOfCurrentElections].deadline =
-        //     block.timestamp +
-        //     _deadline;
-
-        // for (uint256 i = 0; i < participanAddressesList.length; i++) {
-        //     Participant memory participant;
-        //     participant.isParticipant = true;
-
-        //     electionsMapping[numberOfCurrentElections].addressToParticipant[
-        //             participanAddressesList[i]
-        //         ] = participant;
-
-        //     addressesToElectionIDs[
-        //         participanAddressesList[i]
-        //     ] = numberOfCurrentElections;
-        // }
-
         electionsMapping[numberOfCurrentElections].isElectionInited = true;
+        electionsMapping[numberOfCurrentElections].isPrizeWithdrawn = false;
         electionsMapping[numberOfCurrentElections].deadline =
             block.timestamp +
             _deadline;
@@ -144,10 +122,17 @@ contract DAO {
         emit VotingWithElectionID(numberOfCurrentElections);
     }
 
-    function participate(uint256 _electionID) public {
-        electionsMapping[_electionID]
-            .addressToParticipant[msg.sender]
-            .isParticipant = true;
+    function participate(uint256 _electionID)
+        public
+        isElectionInited(_electionID)
+    {
+        Participant memory participant;
+        participant.isParticipant = true;
+
+        addressesToElectionIDs[msg.sender] = _electionID;
+        electionsMapping[_electionID].addressToParticipant[
+            msg.sender
+        ] = participant;
     }
 
     function vote(address _candidate, uint256 _electionID)
