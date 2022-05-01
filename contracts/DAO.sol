@@ -186,8 +186,12 @@ contract DAO is Ownable, ReentrancyGuard {
         electionsMapping[_electionID].treasury = 0;
     }
 
-    function calculateFee(uint256 treasury) internal view returns (uint256) {
-        return (feePercentage * treasury) / 100;
+    function calculateFee(uint256 _treasury) internal view returns (uint256) {
+        return (feePercentage * _treasury) / 100;
+    }
+
+    function finishElection(uint256 _electionID) public onlyOwner {
+        electionsMapping[_electionID].isEnded = true;
     }
 
     function withdrawFee() public payable onlyOwner {

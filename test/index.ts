@@ -310,6 +310,19 @@ describe("DAO", function () {
     await expect(dao.connect(add1).withdrawFee())
       .to.revertedWith("Ownable: caller is not the owner");
   })
+
+
+  it("It should end election", async function () {
+    let participants = [add1.address, add2.address, add3.address];
+    await dao.addVoting(participants, "256200");
+
+    await expect(dao.connect(add1).finishElection("1"))
+      .to.revertedWith("Ownable: caller is not the owner");
+    expect(await (await dao.electionsMapping("1")).isEnded).to.equal(false);
+
+    await expect(dao.finishElection("1"))
+    expect(await (await dao.electionsMapping("1")).isEnded).to.equal(true);
+  })
 });
 
 
