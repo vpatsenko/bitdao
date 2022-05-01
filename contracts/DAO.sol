@@ -1,10 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
-contract DAO is Ownable, ReentrancyGuard {
+contract DAO {
     event Received(address, uint256);
     event VotingWithElectionID(uint256);
     event Withdrawal(address, uint256, bytes);
@@ -90,6 +87,13 @@ contract DAO is Ownable, ReentrancyGuard {
         _;
     }
 
+    modifier onlyOwner() {
+        require(owner == msg.sender, "Ownable: caller is not the owner");
+        _;
+    }
+
+    address private owner;
+
     uint256 public feePercentage;
     uint256 public numberOfCurrentElections;
     uint256 public feeTreasury;
@@ -97,7 +101,8 @@ contract DAO is Ownable, ReentrancyGuard {
     mapping(uint256 => Election) public electionsMapping;
     mapping(address => uint256) public addressesToElectionIDs;
 
-    constructor() ReentrancyGuard() {
+    constructor() {
+        owner = msg.sender;
         feePercentage = 10;
         numberOfCurrentElections = 0;
     }
@@ -107,31 +112,42 @@ contract DAO is Ownable, ReentrancyGuard {
     // In order to test logic with deadline properly I let the owner
     // to assign deadine. The right deadline is 256200;
     function addVoting(
-        address[] memory participanAddressesList,
+        // address[] memory participanAddressesList,
         uint256 _deadline
     ) public onlyOwner {
         numberOfCurrentElections++;
-        electionsMapping[numberOfCurrentElections].isElectionInited = true;
-        electionsMapping[numberOfCurrentElections].isPrizeWithdrawn = false;
+        // electionsMapping[numberOfCurrentElections].isElectionInited = true;
+        // electionsMapping[numberOfCurrentElections].isPrizeWithdrawn = false;
 
+        // electionsMapping[numberOfCurrentElections].deadline =
+        //     block.timestamp +
+        //     _deadline;
+
+        // for (uint256 i = 0; i < participanAddressesList.length; i++) {
+        //     Participant memory participant;
+        //     participant.isParticipant = true;
+
+        //     electionsMapping[numberOfCurrentElections].addressToParticipant[
+        //             participanAddressesList[i]
+        //         ] = participant;
+
+        //     addressesToElectionIDs[
+        //         participanAddressesList[i]
+        //     ] = numberOfCurrentElections;
+        // }
+
+        electionsMapping[numberOfCurrentElections].isElectionInited = true;
         electionsMapping[numberOfCurrentElections].deadline =
             block.timestamp +
             _deadline;
 
-        for (uint256 i = 0; i < participanAddressesList.length; i++) {
-            Participant memory participant;
-            participant.isParticipant = true;
-
-            electionsMapping[numberOfCurrentElections].addressToParticipant[
-                    participanAddressesList[i]
-                ] = participant;
-
-            addressesToElectionIDs[
-                participanAddressesList[i]
-            ] = numberOfCurrentElections;
-        }
-
         emit VotingWithElectionID(numberOfCurrentElections);
+    }
+
+    function participate(uint256 _electionID) public {
+        electionsMapping[_electionID]
+            .addressToParticipant[msg.sender]
+            .isParticipant = true;
     }
 
     function vote(address _candidate, uint256 _electionID)
