@@ -22,7 +22,6 @@ describe("DAO", function () {
     [owner, add1, add2, add3, add4] = await ethers.getSigners();
   });
 
-
   it("It should addVoting, check electionId and then vote with address which was not a participant", async function () {
     let participants = [add1, add2, add3];
 
@@ -389,7 +388,6 @@ describe("DAO", function () {
       .to.revertedWith("Ownable: caller is not the owner");
   })
 
-
   it("It should end election", async function () {
     let participants = [add1, add2, add3];
     await expect(dao.addVoting("256200"))
@@ -409,6 +407,31 @@ describe("DAO", function () {
     expect(await (await dao.electionsMapping("1")).isEnded).to.equal(true);
   })
 
+  it("It should test isPrizeWithdrawable modifier", async function () {
+    let participants = [add1, add2, add3];
+    await expect(dao.addVoting("5"))
+      .to.emit(dao, 'VotingWithElectionID')
+      .withArgs("1");
+
+    for (let i = 0; i < participants.length; i++) {
+      let tx = await dao.connect(participants[i]).participate("1");
+      await tx.wait();
+    }
+
+    const options = { value: ethers.utils.parseEther("0.01"), from: add1.address };
+    let tx = await dao.connect(add1).vote(add2.address, "1", options);
+    await tx.wait();
+
+
+
+    await sleep(4000);
+    await dao.connect(add2).withdrawPrize("1");
+
+    expect(await (await dao.electionsMapping("1")).isEnded).to.equal(true);
+    expect(await (await dao.electionsMapping("1")).isPrizeWithdrawn).to.equal(true);
+    expect(await (await dao.electionsMapping("1")).isElectionInited).to.equal(true);
+
+  })
 
 });
 

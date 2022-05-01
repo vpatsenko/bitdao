@@ -57,7 +57,6 @@ contract DAO {
             !electionsMapping[_electionID].isPrizeWithdrawn,
             "prize has been withdrawn already"
         );
-
         if (electionsMapping[_electionID].deadline < block.timestamp) {
             electionsMapping[_electionID].isEnded = true;
         }
@@ -151,7 +150,6 @@ contract DAO {
             .isVoted = true;
         electionsMapping[_electionID].treasury += msg.value;
 
-        // TODO: solve two winners problem
         if (
             electionsMapping[_electionID].winner.voteAmount <
             electionsMapping[_electionID]
