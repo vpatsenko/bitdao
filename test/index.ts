@@ -13,14 +13,12 @@ describe("DAO", function () {
   let add3: SignerWithAddress;
   let add4: SignerWithAddress;
 
-  const provider = waffle.provider;
 
   beforeEach(async () => {
     const DAO = await ethers.getContractFactory("DAO");
     dao = await DAO.deploy();
     await dao.deployed();
 
-    // the first signer is owner by default
     [owner, add1, add2, add3, add4] = await ethers.getSigners();
   });
 

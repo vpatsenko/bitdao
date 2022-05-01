@@ -28,3 +28,5 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
+
+task("balance", "Prints an account's balance").setAction(async () => { });

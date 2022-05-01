@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv";
 
+import { addElections } from "./task/task";
 import { HardhatUserConfig, task } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
@@ -19,6 +20,14 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     console.log(account.address);
   }
 });
+
+task("balance", "Prints an account's balance")
+  .addParam("account", "The account's address")
+  .setAction(async (taskArgs, hre) => {
+    // await addElections("256200");
+    console.log(taskArgs)
+  }
+  );
 
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
