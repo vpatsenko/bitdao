@@ -67,7 +67,7 @@ task("participate", "pariticipates with given hardhat id in the given election")
 
 task("vote", "votes for specified candidate")
   .addParam("address", "contract address number")
-  .addParam("candidate", "candidate account")
+  .addParam("candidateid", "candidateid")
   .addParam("election", "electionID")
   .addParam("account", "number of account from list <npx hardhat accounts --network rinkeby> starting from zero")
   .setAction(async (taskArgs, hre) => {
@@ -79,7 +79,7 @@ task("vote", "votes for specified candidate")
       throw new Error("contract address is required");
     }
 
-    if (taskArgs.candidate == undefined) {
+    if (taskArgs.candidateid == undefined) {
       throw new Error("candidate is required");
     }
 
@@ -92,11 +92,15 @@ task("vote", "votes for specified candidate")
       throw new Error("account is not valid");
     }
 
+    if (signers.length <= taskArgs.candidateid) {
+      throw new Error("candidateid is not valid");
+    }
+
     const accountID = parseInt(taskArgs.account);
+    const candidateID = parseInt(taskArgs.candidateid);
 
-    await vote(hre, taskArgs.address, taskArgs.candidate, taskArgs.election, signers[accountID]);
+    await vote(hre, taskArgs.address, signers[candidateID].address, taskArgs.election, signers[accountID]);
   });
-
 
 task("finish", "finishes the election with given electionID")
   .addParam("address", "contract address number")
@@ -141,16 +145,10 @@ task("withdrawprize", "withdraws prize for winner")
 
 task("withdrawfee", "withdraws fee")
   .addParam("address", "contract address number")
-  .addParam("election", "electionID")
   .setAction(async (taskArgs, hre) => {
     if (taskArgs.address === undefined) {
       throw new Error("contract address is required");
     }
-
-    if (taskArgs.election == undefined) {
-      throw new Error("election id is required");
-    }
-
     await withdrawFee(hre, taskArgs.address);
   });
 
