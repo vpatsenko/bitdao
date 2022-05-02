@@ -130,8 +130,8 @@ task("withdrawprize", "withdraws prize for winner")
       throw new Error("contract address is required");
     }
 
-    if (taskArgs.candidate == undefined) {
-      throw new Error("candidate is required");
+    if (taskArgs.election == undefined) {
+      throw new Error("election is required");
     }
 
     const signers = await hre.ethers.getSigners();

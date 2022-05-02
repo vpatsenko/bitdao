@@ -49,12 +49,12 @@ npx hardhat participate --electionid 1 --account 1 --address $CONTRACTADDRESS --
 
 To vote for a candidate
 ```shell
-npx hardhat vote --address $CONTRACTADDRESS --candidateid <candidateID> --election 1 account 2 --network rinkeby # npx hardhat vote --address $CONTRACTADDRESS --candidate 1 --election 1 account 2 --network rinkeby
+npx hardhat vote --address $CONTRACTADDRESS --candidateid <candidateID> --election 1 --account 2 --network rinkeby # npx hardhat vote --address $CONTRACTADDRESS --candidate 1 --election 1 --account 2 --network rinkeby
 ```
 
 To withdraw prize
 ```shell
-npx hardhat withdrawprize --address $CONTRACTADDRESS --winner <accountID> --election 1 account 2 --network rinkeby # npx hardhat withdrawprize --address $CONTRACTADDRESS --winner q --election 1 account 2 --network rinkeby
+npx hardhat withdrawprize --address $CONTRACTADDRESS --winner <accountID> --election 1 --network rinkeby # npx hardhat withdrawprize --address $CONTRACTADDRESS --winner 1 --election 1  --network rinkeby
 ```
 
 To withdraw fee
