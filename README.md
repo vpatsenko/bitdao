@@ -27,3 +27,23 @@ Then deploy to the testnet
 npx hardhat run scripts/deploy.ts --network rinkeby
 ```
 
+### Running hardhat tasks
+
+```shell
+export CONTRACTADDRESS=<address which you received when deployed the contract>
+```
+
+To add voting with 3 days deadline
+```shell
+npx hardhat addVoting --deadline 256200 --address $CONTRACTADDRESS --network rinkeby
+```
+
+
+
+px hardhat vote --address $CONTRACTADDRESS --candidate candidateAddress --election 1 --network rinkeby
+
+
+To vote for a candidate
+```shell
+npx hardhat vote --address $CONTRACTADDRESS --candidate candidateAddress --election 1 --network rinkeby
+```

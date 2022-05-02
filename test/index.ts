@@ -24,10 +24,17 @@ describe("DAO", function () {
 
   it("It should addVoting, check electionId and then vote with address which was not a participant", async function () {
     let participants = [add1, add2, add3];
-
     await expect(dao.addVoting("256200"))
       .to.emit(dao, 'VotingWithElectionID')
       .withArgs("1");
+
+    let tx = await dao.addVoting("256200");
+
+    console.log(tx);
+
+    let w = await tx.wait(1);
+    console.log(w);
+
 
     for (let i = 0; i < participants.length; i++) {
       let tx = await dao.connect(participants[i]).participate("1");
@@ -422,15 +429,12 @@ describe("DAO", function () {
     let tx = await dao.connect(add1).vote(add2.address, "1", options);
     await tx.wait();
 
-
-
     await sleep(4000);
     await dao.connect(add2).withdrawPrize("1");
 
     expect(await (await dao.electionsMapping("1")).isEnded).to.equal(true);
     expect(await (await dao.electionsMapping("1")).isPrizeWithdrawn).to.equal(true);
     expect(await (await dao.electionsMapping("1")).isElectionInited).to.equal(true);
-
   })
 
 });

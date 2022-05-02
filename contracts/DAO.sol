@@ -112,6 +112,7 @@ contract DAO {
     // // to assign deadine. The right deadline is 256200;
     function addVoting(uint256 _deadline) public onlyOwner {
         numberOfCurrentElections++;
+
         electionsMapping[numberOfCurrentElections].isElectionInited = true;
         electionsMapping[numberOfCurrentElections].isPrizeWithdrawn = false;
         electionsMapping[numberOfCurrentElections].deadline =
