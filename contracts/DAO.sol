@@ -126,6 +126,10 @@ contract DAO {
         public
         isElectionInited(_electionID)
     {
+        require(
+            addressesToElectionIDs[msg.sender] == 0,
+            "addres is already a participated in voting"
+        );
         Participant memory participant;
         participant.isParticipant = true;
 
